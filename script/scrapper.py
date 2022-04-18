@@ -38,7 +38,7 @@ def move_next(driver):
 
 def load_data(total, driver, csv_writer):
     count = 0
-    while total > count:
+    while total >= count:
         body = driver.find_element_by_class_name("basic_tbl.thickgr.w100.mgtp08.flft")
         lists = body.find_elements_by_tag_name("tr")
         index = 0
@@ -55,6 +55,7 @@ def load_data(total, driver, csv_writer):
                 simple = company.find_element_by_class_name("btn-in.btncol_yo")
                 webdriver.ActionChains(driver).double_click(simple).perform()
                 
+                recover = 0
                 # NOTE: wait modal
                 while shown == 0:
                     company_name = driver.find_element_by_id("strSangho")
@@ -63,9 +64,13 @@ def load_data(total, driver, csv_writer):
                     tel = driver.find_element_by_id("strTel")
                     addr = driver.find_element_by_id("strAddr")
                     
+                    print("company:" + company_name.text)
+                    
                     if company_name.text != "":
                         # break while
                         shown = 1
+                        recover = 0
+                        
                         category_concat = category_list.text.replace("\n","/")
                         
                         csv_writer.writerow([company_name.text, ceo.text, tel.text, addr.text, category_concat])
@@ -77,11 +82,31 @@ def load_data(total, driver, csv_writer):
                         count += 1
                         
                     else :
-                        time.sleep(1)
-                        print("WAIT: " + str(count) + " / " + str(total))
+                        if recover > 5:
+                            print("Try recover")
+                            sub_info = company.find_elements_by_tag_name("td")
+                            if(len(sub_info) > 0):
+                                company_name = sub_info[1].text
+                                ceo = sub_info[3].text
+                                addr = sub_info[4].text
+                                category_list = sub_info[6].text
+                                tel = sub_info[7].text
+                                category_concat = category_list.replace("\n","/")
+                                csv_writer.writerow([company_name, ceo, tel, addr, category_concat])
+                                print(company_name + "," + ceo + "," + addr + "," + category_list + "," + tel + "," )
+                            else:
+                                print("Empty")
+                                csv_writer.writerow([str(count), "", "", "", ""])
+                    
+                            recover = 0
+                            shown = 1
+                        else:
+                            time.sleep(1)
+                            recover += 1
+                            print("WAIT: " + str(count) + " / " + str(total))
             index += 1
 
-        move_next()
+        move_next(driver)
 
 def finish(csv, driver):
     csv.close()
@@ -113,7 +138,7 @@ def main():
     csv_writer.writerow( ['Company name','CEO', 'TEL', 'Address', 'Category'] )
     
     #Please insert to id
-    set_category(drive, "id") 
+    set_category(drive, "item3") 
     search(drive)
 
     total = get_total_cnt(drive)
