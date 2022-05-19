@@ -27,7 +27,7 @@ class _MainState extends State<Main> {
         ChangeNotifierProvider<ChangeNotifier>(create: (context) => StateProvider()),
       ],
       child: ScreenUtilInit(
-        builder: (BuildContext context) {
+        builder: (BuildContext context, child) {
           return MaterialApp(
             title: 'Flutter Demo',
             theme: FlexThemeData.light(scheme: FlexScheme.sanJuanBlue, appBarElevation: 2),

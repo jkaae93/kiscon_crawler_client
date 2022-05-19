@@ -1,11 +1,13 @@
 import csv
 import datetime
+from numpy import append
 from pandas import notnull
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 import os
 import time
+import argparse
 
 # init selenium driver
 def drive_init():
@@ -17,6 +19,7 @@ def drive_init():
 
 # set category for search
 def set_category(driver, id):
+    print("selected category " + id)
     driver.find_element_by_id(id).click()
 
 # get colum count
@@ -38,7 +41,7 @@ def move_next(driver):
 
 def load_data(total, driver, csv_writer):
     count = 0
-    while total >= count:
+    while total > count:
         body = driver.find_element_by_class_name("basic_tbl.thickgr.w100.mgtp08.flft")
         lists = body.find_elements_by_tag_name("tr")
         index = 0
@@ -64,7 +67,7 @@ def load_data(total, driver, csv_writer):
                     tel = driver.find_element_by_id("strTel")
                     addr = driver.find_element_by_id("strAddr")
                     
-                    print("company:" + company_name.text)
+                    print("company: " + company_name.text)
                     
                     if company_name.text != "":
                         # break while
@@ -81,6 +84,7 @@ def load_data(total, driver, csv_writer):
                         # update count
                         count += 1
                         
+                        print("Finished: " + str(count))
                     else :
                         if recover > 5:
                             print("Try recover")
@@ -113,32 +117,47 @@ def finish(csv, driver):
     driver.close()
     
     print("-----------------------------------------------------------------------")
-    print("           ---    ----   ---         ----------------------------------")
-    print(" -------------      --   ---   ----   ---------------------------------")
-    print("           ---    -  -   ---   ----   ---------------------------------")
-    print(" -------------    --     ---   ----   ---------------------------------")
-    print("           ---    ---    ---         ----------------------------------")
+    print("--         ---    ----   ---         ----------------------------------")
+    print("--  ----------      --   ---   ----   ---------------------------------")
+    print("--         ---    -  -   ---   ----   ---------------------------------")
+    print("--  ----------    --     ---   ----   ---------------------------------")
+    print("--         ---    ---    ---         ----------------------------------")
     print("-----------------------------------------------------------------------")
 
 def main():
+
+    parser = argparse.ArgumentParser(description='Entered category')
+    parser.add_argument('--args')
+    
+    # init date
     ts = datetime.datetime.now()
     start =  datetime.datetime.now().strftime("%y.%m.%d-%H:%M")
+
+    args = parser.parse_args()
+    print("args: " +str(args))
+    types = args.args.split(',')
+    print("Selected: " + str(types))
+
 
     print("-----------------------------------------------------------------------")
     print("                   start: " + start)
     print("-----------------------------------------------------------------------")
-
+    
+    # init selenium
     drive = drive_init()
     drive.get("https://www.kiscon.net/gongsi/step_custom.asp")
 
+    # create csv
     date =  datetime.datetime.now().strftime("%y%m%d")
     csv_filename = "./script/"+date+".csv"
     csv_open = open(csv_filename, "w+", encoding='utf-8')
     csv_writer = csv.writer(csv_open)
     csv_writer.writerow( ['Company name','CEO', 'TEL', 'Address', 'Category'] )
     
-    #Please insert to id
-    set_category(drive, "item3") 
+    # Please insert to id
+    for type in types:
+        set_category(drive, type)
+    
     search(drive)
 
     total = get_total_cnt(drive)
