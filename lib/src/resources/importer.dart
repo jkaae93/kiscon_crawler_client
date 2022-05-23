@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:process_run/shell.dart';
 
-class Importer {
+class Importer extends ChangeNotifier {
+  Map<DateTime, List<String>> _log = {};
   var _shell = Shell();
+  late Function _setState;
+
+  Importer(Function update) {
+    this._setState = update;
+  }
+
+  @override
+  void notifyListeners() {
+    this._setState();
+    super.notifyListeners();
+  }
 
   void init() async {
     await _shell.run('''
@@ -17,9 +29,29 @@ class Importer {
 
   Future<void> runShell(List<String> categories) async {
     String category = categories.join(',');
-    await _shell.run('''
+    DateTime now = DateTime.now();
+    _log.addAll({now: []});
+    await _shell.run(
+      '''
       python3 script/scrapper.py --args $category
-    ''', onProcess: (process) {}).then((value) => AlertDialog(content: Text("Finished")));
+    ''',
+      onProcess: (process) {
+        process.outLines.asBroadcastStream(
+          onListen: (subscription) {
+            _log[now]!.add(subscription.toString());
+            print("${subscription.toString()}");
+            notifyListeners();
+          },
+          onCancel: (subscription) {
+            _log[now]!.add(subscription.toString());
+            print("${subscription.toString()}");
+            notifyListeners();
+          },
+        );
+      },
+    ).then(
+      (value) => {},
+    );
   }
 
   void downloadFile() async {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:kiscon_crawler_client/src/provider/storage_provider.dart';
 import 'package:kiscon_crawler_client/src/resources/constant.dart';
 import 'package:kiscon_crawler_client/src/resources/importer.dart';
+import 'package:kiscon_crawler_client/src/ui/inprogress.dart';
 import 'package:provider/provider.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
@@ -48,7 +49,9 @@ class _HomeState extends State<Home> {
               ),
               TextButton(
                 onPressed: () => setState(() {
-                  Importer().runShell(_selected);
+                  Navigator.push(context, PageRouteBuilder(pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+                    return Inprogress(category: _selected);
+                  }));
                 }),
                 child: Text("Run"),
               ),
